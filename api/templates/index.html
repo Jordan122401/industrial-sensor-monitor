@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Industrial Sensor Monitoring System</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(50, 53, 60, 0.6);
+            backdrop-filter: blur(20px);
+        }
+
+        .status-dot {
+            width: 0.6rem;
+            height: 0.6rem;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+
+        .pulse-safe {
+            box-shadow: 0 0 8px 1px rgba(0, 163, 253, 0.4);
+        }
+
+        .pulse-warning {
+            box-shadow: 0 0 12px 2px rgba(255, 140, 0, 0.4);
+        }
+
+        .pulse-critical {
+            box-shadow: 0 0 15px 3px rgba(255, 135, 128, 0.5);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#10131a",
+                        surface: "#10131a",
+                        "surface-container-lowest": "#0b0e14",
+                        "surface-container-low": "#191c22",
+                        "surface-container": "#1d2026",
+                        "surface-container-high": "#272a31",
+                        "surface-container-highest": "#32353c",
+                        "on-surface": "#e1e2eb",
+                        "primary": "#ffb77d",
+                        "primary-container": "#ff8c00",
+                        "secondary": "#98cbff",
+                        "secondary-container": "#00a2fd",
+                        "tertiary": "#ffb3ae",
+                        "tertiary-container": "#ff8780",
+                        "outline": "#a48c7a"
+                    },
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-surface-container-lowest text-on-surface font-body selection:bg-primary-container selection:text-black">
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-[#10131A] flex flex-col border-r border-white/5 z-50">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-8 h-8 bg-primary-container flex items-center justify-center rounded-lg">
+                    <span class="material-symbols-outlined text-black text-xl">settings_input_component</span>
+                </div>
+                <div>
+                    <h2 class="text-orange-500 font-black font-headline tracking-tight">ESP32-GATEWAY-01</h2>
+                    <p class="text-[10px] text-slate-500 font-mono uppercase tracking-widest">BLE Telemetry Active</p>
+                </div>
+            </div>
+
+            <nav class="space-y-1">
+                <a class="flex items-center gap-3 px-4 py-3 bg-[#191C22] text-orange-400 border-r-4 border-orange-500 font-label text-xs uppercase tracking-tighter" href="#">
+                    <span class="material-symbols-outlined text-lg">dashboard</span>
+                    Dashboard
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-200 hover:bg-[#191C22] text-xs uppercase tracking-tighter transition-colors" href="#recent-readings">
+                    <span class="material-symbols-outlined text-lg">history</span>
+                    Recent Readings
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-200 hover:bg-[#191C22] text-xs uppercase tracking-tighter transition-colors" href="#system-health">
+                    <span class="material-symbols-outlined text-lg">monitoring</span>
+                    System Health
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-200 hover:bg-[#191C22] text-xs uppercase tracking-tighter transition-colors" href="#live-payload">
+                    <span class="material-symbols-outlined text-lg">code</span>
+                    Live Payload
+                </a>
+            </nav>
+        </div>
+
+        <div class="mt-auto p-6 space-y-4">
+            <div class="w-full py-3 bg-primary-container text-black font-bold text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">memory</span>
+                Live BLE + Flask Stack
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex items-center gap-3 px-4 py-2 text-slate-600 text-[10px] uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-sm">developer_board</span>
+                    ESP32 Node
+                </div>
+                <div class="flex items-center gap-3 px-4 py-2 text-slate-600 text-[10px] uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-sm">bluetooth</span>
+                    BLE Logger
+                </div>
+                <div class="flex items-center gap-3 px-4 py-2 text-slate-600 text-[10px] uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-sm">storage</span>
+                    SQLite + Flask
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <header class="fixed top-0 right-0 left-64 bg-[#0B0E14] h-16 flex justify-between items-center px-6 z-40 shadow-[0px_2px_8px_rgba(0,0,0,0.5)]">
+        <div class="flex items-center gap-8">
+            <h1 class="text-orange-500 font-bold font-headline text-xl uppercase tracking-widest">
+                Industrial Sensor Monitoring System
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div id="systemStatusBadge"
+                 class="flex items-center gap-2 bg-[#191C22] px-3 py-1.5 rounded-lg border border-white/5">
+                <span id="systemStatusDot" class="status-dot bg-sky-400 pulse-safe"></span>
+                <span id="systemStatusBadgeText" class="text-[10px] font-mono text-sky-300 uppercase">Loading</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="ml-64 pt-20 p-8 min-h-screen">
+        <div id="errorBox" class="hidden mb-6 rounded-xl border border-red-500/30 bg-red-500/10 text-red-200 px-4 py-3 text-sm"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-surface-container-low p-6 rounded-xl border-t border-white/5">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Temperature</span>
+                    <span class="material-symbols-outlined text-primary">device_thermostat</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="temperatureValue" class="text-4xl font-headline font-bold text-on-surface">--</span>
+                    <span class="text-lg text-slate-500 font-light">°C</span>
+                </div>
+                <div class="mt-4 flex items-center gap-2 text-[10px] text-slate-400">
+                    <span class="material-symbols-outlined text-xs">trending_up</span>
+                    <span id="tempTrend">Waiting for data</span>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-6 rounded-xl border-t border-white/5">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Humidity</span>
+                    <span class="material-symbols-outlined text-secondary">humidity_mid</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="humidityValue" class="text-4xl font-headline font-bold text-on-surface">--</span>
+                    <span class="text-lg text-slate-500 font-light">%</span>
+                </div>
+                <div class="mt-4 flex items-center gap-2 text-[10px] text-slate-400">
+                    <span class="material-symbols-outlined text-xs">water_drop</span>
+                    <span id="humidityTrend">Waiting for data</span>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-6 rounded-xl border-t border-white/5">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Distance</span>
+                    <span class="material-symbols-outlined text-tertiary">straighten</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="distanceValue" class="text-4xl font-headline font-bold text-on-surface">--</span>
+                    <span class="text-lg text-slate-500 font-light">cm</span>
+                </div>
+                <div class="mt-4 flex items-center gap-2 text-[10px] text-slate-400">
+                    <span class="material-symbols-outlined text-xs">sensors</span>
+                    <span id="distanceTrend">Waiting for data</span>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-6 rounded-xl border-t border-white/5">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Orientation</span>
+                    <span class="material-symbols-outlined text-orange-400">screen_rotation</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="orientationValue" class="text-3xl font-headline font-bold text-on-surface">--</span>
+                </div>
+                <div class="mt-4 flex items-center gap-2 text-[10px] text-slate-400">
+                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    <span id="orientationNote">Waiting for data</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-surface-container-low p-6 rounded-xl border-t border-white/5">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-headline text-sm font-bold uppercase tracking-widest text-slate-300">
+                            Telemetry Overview
+                        </h3>
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1 bg-surface-container-high rounded text-[10px] text-primary border border-primary/20">TEMP</span>
+                            <span class="px-3 py-1 bg-surface-container text-[10px] text-slate-500">HUMID</span>
+                            <span class="px-3 py-1 bg-surface-container text-[10px] text-slate-500">DIST</span>
+                        </div>
+                    </div>
+
+                    <div class="h-64 w-full rounded-xl border border-white/5 bg-[#151922] flex flex-col justify-center items-center text-center px-6">
+                        <span class="material-symbols-outlined text-orange-400 text-4xl mb-3">insights</span>
+                        <p class="text-lg font-headline text-slate-200 mb-2">Stitch layout is merged</p>
+                        <p class="text-sm text-slate-400 max-w-xl">
+                            This panel is now your new dashboard shell. The live cards, table, status badge,
+                            and payload are real. The historical chart can be wired next with Chart.js.
+                        </p>
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+                            <div class="rounded-lg bg-surface-container px-4 py-3 border border-white/5">
+                                <div class="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Latest Temp</div>
+                                <div id="overviewTemp" class="text-xl font-headline text-orange-300">--</div>
+                            </div>
+                            <div class="rounded-lg bg-surface-container px-4 py-3 border border-white/5">
+                                <div class="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Latest Humidity</div>
+                                <div id="overviewHumidity" class="text-xl font-headline text-sky-300">--</div>
+                            </div>
+                            <div class="rounded-lg bg-surface-container px-4 py-3 border border-white/5">
+                                <div class="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Latest Distance</div>
+                                <div id="overviewDistance" class="text-xl font-headline text-rose-300">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low rounded-xl border-t border-white/5 flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-white/5 bg-[#191c22]">
+                    <h3 class="font-headline text-sm font-bold uppercase tracking-widest text-slate-300">
+                        System Monitoring
+                    </h3>
+                </div>
+
+                <div class="p-6 space-y-4 flex-1">
+                    <div id="alertPanel" class="flex items-center justify-between p-3 bg-sky-500/5 rounded-lg border-l-2 border-sky-400">
+                        <div>
+                            <p id="alertTitle" class="text-[11px] font-bold text-sky-300 uppercase">Waiting for data</p>
+                            <p id="alertSubtitle" class="text-[10px] text-slate-400 font-mono">No live status yet</p>
+                        </div>
+                        <span id="alertIcon" class="material-symbols-outlined text-sky-300 pulse-safe">monitor_heart</span>
+                    </div>
+
+                    <div class="rounded-lg bg-surface-container p-4 border border-white/5">
+                        <div class="text-[10px] text-slate-500 uppercase font-mono mb-2">Current Notes</div>
+                        <div id="systemNotes" class="text-sm text-slate-300 leading-6">
+                            Waiting for live sensor data.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 mt-auto">
+                    <div class="text-[10px] text-slate-500 uppercase font-mono mb-2">Platform Stability</div>
+                    <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                        <div id="platformStabilityBar" class="bg-sky-400 h-full w-[0%] transition-all duration-300"></div>
+                    </div>
+                    <div id="platformStabilityText" class="mt-2 text-[10px] font-mono text-slate-400 uppercase">
+                        No data yet
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="recent-readings" class="bg-surface-container-low rounded-xl border-t border-white/5 mb-8 overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h3 class="font-headline text-sm font-bold uppercase tracking-widest text-slate-300">
+                    Recent Telemetry Streams
+                </h3>
+                <span id="lastSync" class="text-[10px] font-mono text-slate-500">LAST SYNC: --</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-surface-container-high text-[10px] font-mono text-slate-500 uppercase">
+                        <tr>
+                            <th class="px-6 py-3">Timestamp</th>
+                            <th class="px-6 py-3">Temp (°C)</th>
+                            <th class="px-6 py-3">Humid (%)</th>
+                            <th class="px-6 py-3">Dist (cm)</th>
+                            <th class="px-6 py-3">Orientation</th>
+                            <th class="px-6 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-xs font-mono divide-y divide-white/5">
+                        <tr>
+                            <td class="px-6 py-4 text-slate-300" colspan="6">Waiting for data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="system-health" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+            <div class="bg-surface-container-low p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                <div id="dbDot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-slate-300 truncate">SQLITE DB</p>
+                    <p id="databaseStatus" class="text-[9px] font-mono text-slate-500">Checking...</p>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                <div id="tablesDot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-slate-300 truncate">TABLES</p>
+                    <p id="tablesStatus" class="text-[9px] font-mono text-slate-500">Checking...</p>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                <div id="apiDot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-slate-300 truncate">FLASK API</p>
+                    <p id="apiStatus" class="text-[9px] font-mono text-slate-500">Checking...</p>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                <div id="streamDot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-slate-300 truncate">LIVE STREAM</p>
+                    <p id="streamStatus" class="text-[9px] font-mono text-slate-500">Checking...</p>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                <div id="updateDot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-slate-300 truncate">LAST UPDATE</p>
+                    <p id="lastUpdate" class="text-[9px] font-mono text-slate-500">Waiting...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="live-payload" class="bg-surface-container-low rounded-xl border-t border-white/5 overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h3 class="font-headline text-sm font-bold uppercase tracking-widest text-slate-300">
+                    Latest Payload
+                </h3>
+                <span class="text-[10px] font-mono text-slate-500">RAW LIVE JSON</span>
+            </div>
+
+            <div class="p-6">
+                <pre id="latestJson" class="bg-[#0f131a] border border-white/5 rounded-xl p-4 text-sm text-slate-300 overflow-x-auto">Waiting for data...</pre>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  sensor-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sensor-backend
+    ports:
+      - "9000:9000"
+    volumes:
+      - sensor-data:/app/data
+    environment:
+      - SENSOR_DB_PATH=/app/data/sensor_data.db
+    network_mode: host
+    privileged: true
+    restart: unless-stopped
+
+  rest-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: rest-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - sensor-data:/app/data
+    environment:
+      - SENSOR_DB_PATH=/app/data/sensor_data.db
+    depends_on:
+      - sensor-backend
+    restart: unless-stopped
+
+volumes:
+  sensor-data:
