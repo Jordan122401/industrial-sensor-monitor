@@ -1,6 +1,5 @@
 #include "SensorParser.h"
 #include <sstream>
-#include <vector>
 
 bool SensorParser::parse(const std::string& rawData, SensorData& data) {
     std::stringstream ss(rawData);
@@ -9,7 +8,10 @@ bool SensorParser::parse(const std::string& rawData, SensorData& data) {
     bool gotTemp = false;
     bool gotHum = false;
     bool gotDist = false;
-    bool gotMotion = false;
+    bool gotAccelX = false;
+    bool gotAccelY = false;
+    bool gotAccelZ = false;
+    bool gotOrient = false;
 
     while (std::getline(ss, token, ',')) {
         size_t eqPos = token.find('=');
@@ -30,9 +32,18 @@ bool SensorParser::parse(const std::string& rawData, SensorData& data) {
             } else if (key == "DIST") {
                 data.distance = std::stod(value);
                 gotDist = true;
-            } else if (key == "MOTION") {
-                data.motion = std::stod(value);
-                gotMotion = true;
+            } else if (key == "ACCEL_X") {
+                data.accelX = std::stoi(value);
+                gotAccelX = true;
+            } else if (key == "ACCEL_Y") {
+                data.accelY = std::stoi(value);
+                gotAccelY = true;
+            } else if (key == "ACCEL_Z") {
+                data.accelZ = std::stoi(value);
+                gotAccelZ = true;
+            } else if (key == "ORIENT") {
+                data.orientation = value;
+                gotOrient = true;
             } else {
                 return false;
             }
@@ -41,5 +52,5 @@ bool SensorParser::parse(const std::string& rawData, SensorData& data) {
         }
     }
 
-    return gotTemp && gotHum && gotDist && gotMotion;
+    return gotTemp && gotHum && gotDist && gotAccelX && gotAccelY && gotAccelZ && gotOrient;
 }

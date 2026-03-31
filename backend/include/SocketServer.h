@@ -14,6 +14,7 @@ public:
 
     bool start(int port = 9000);
     void updateLatestData(const SensorData& data);
+    void updateSystemStatus(const std::string& status);
 
 private:
     void runServer();
@@ -24,6 +25,7 @@ private:
     std::thread serverThread_;
     std::mutex dataMutex_;
     SensorData latestData_;
+    std::string currentStatus_;
     bool hasData_;
     std::atomic<bool> running_;
 };

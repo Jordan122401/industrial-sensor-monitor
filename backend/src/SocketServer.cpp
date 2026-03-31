@@ -9,7 +9,8 @@
 #include <iomanip>
 
 SocketServer::SocketServer()
-    : serverFd_(-1), port_(9000), hasData_(false), running_(false) {}
+    : serverFd_(-1), port_(9000), hasData_(false), running_(false),
+      currentStatus_("NO_STATUS") {}
 
 SocketServer::~SocketServer() {
     running_ = false;
@@ -40,6 +41,11 @@ void SocketServer::updateLatestData(const SensorData& data) {
     hasData_ = true;
 }
 
+void SocketServer::updateSystemStatus(const std::string& status) {
+    std::lock_guard<std::mutex> lock(dataMutex_);
+    currentStatus_ = status;
+}
+
 std::string SocketServer::formatLatestData() {
     std::lock_guard<std::mutex> lock(dataMutex_);
 
@@ -51,10 +57,12 @@ std::string SocketServer::formatLatestData() {
     oss << std::fixed << std::setprecision(1);
     oss << "TEMP=" << latestData_.temperature
         << ",HUM=" << latestData_.humidity
-        << ",DIST=" << latestData_.distance;
-
-    oss << std::fixed << std::setprecision(2);
-    oss << ",MOTION=" << latestData_.motion << "\n";
+        << ",DIST=" << latestData_.distance
+        << ",ACCEL_X=" << latestData_.accelX
+        << ",ACCEL_Y=" << latestData_.accelY
+        << ",ACCEL_Z=" << latestData_.accelZ
+        << ",ORIENT=" << latestData_.orientation
+        << ",STATUS=" << currentStatus_ << "\n";
 
     return oss.str();
 }
@@ -112,6 +120,10 @@ void SocketServer::runServer() {
 
             if (request.find("GET_DATA") != std::string::npos) {
                 std::string response = formatLatestData();
+                send(clientFd, response.c_str(), response.size(), 0);
+            } else if (request.find("GET_STATUS") != std::string::npos) {
+                std::lock_guard<std::mutex> lock(dataMutex_);
+                std::string response = "STATUS=" + currentStatus_ + "\n";
                 send(clientFd, response.c_str(), response.size(), 0);
             } else {
                 std::string response = "INVALID_REQUEST\n";
