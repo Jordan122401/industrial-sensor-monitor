@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/test_sensor_parser.dir/link.d CMakeFiles/test_sensor_parser.dir/tests/test_sensor_parser.cpp.o CMakeFiles/test_sensor_parser.dir/src/SensorParser.cpp.o -o test_sensor_parser
